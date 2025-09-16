@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Resultados - Jugadores</title>
+  <style>
+    :root{
+      --bg:#f6f8fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2563eb;
+      --success:#10b981;
+      --danger:#ef4444;
+      --table-border:#e6e9ef;
+    }
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+      background:linear-gradient(180deg,var(--bg),#fff);
+      color:#111827;
+      padding:32px;
+    }
+    .container{ max-width:1000px; margin:0 auto; }
+    h1{ margin:0 0 12px; font-size:22px; }
+    .meta{ display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+    button{
+      background:var(--accent); color:#fff; border:0; padding:8px 12px; border-radius:6px;
+      cursor:pointer; font-weight:600;
+    }
+    button:disabled{ opacity:.6; cursor:default; }
+    .status{ color:var(--muted); font-size:14px; }
+    .card{
+      background:var(--card); border:1px solid var(--table-border); padding:16px; border-radius:10px;
+      box-shadow:0 4px 18px rgba(16,24,40,0.03);
+    }
+    table{
+      width:100%; border-collapse:collapse; margin-top:12px; font-size:14px;
+    }
+    thead th{
+      text-align:left; padding:10px 12px; font-size:13px; color:var(--muted);
+      border-bottom:1px solid var(--table-border);
+    }
+    tbody td{ padding:10px 12px; border-bottom:1px solid #f4f6fb; }
+    tbody tr:hover{ background:#fbfdff; }
+    .center{ text-align:center; }
+    .pill{ display:inline-block; padding:4px 8px; border-radius:999px; font-weight:700; font-size:12px; }
+    .ok{ background: rgba(16,185,129,0.12); color:var(--success); }
+    .no{ background: rgba(239,68,68,0.10); color:var(--danger); }
+    .small{ font-size:12px; color:var(--muted); }
+    .empty{ padding:24px; text-align:center; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Resultados — Jugadores</h1>
+    <div class="meta">
+      <div class="status" id="status">Cargando datos...</div>
+      <div style="margin-left:auto">
+        <button id="refreshBtn">Actualizar</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div id="tableWrapper">
+        <!-- Tabla se injecta aquí -->
+        <div class="empty" id="empty">Cargando registros...</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Cambia la URL aquí si tu endpoint está en otro host.
+  // Si el HTML se sirve desde el mismo origen que el backend deja '/users'
+  const API_URL = '/users'; // si estás probando desde otro origen usa la URL absoluta: 'https://tu-dominio.xyz/users'
+
+  const statusEl = document.getElementById('status');
+  const wrapper = document.getElementById('tableWrapper');
+  const emptyEl = document.getElementById('empty');
+  const refreshBtn = document.getElementById('refreshBtn');
+
+  async function fetchUsers() {
+    setLoading(true);
+    try {
+      const res = await fetch(API_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      // esperamos estructura: { users: [ ... ] }
+      const users = data.users || data;
+      renderTable(users);
+      setStatus(`Última actualización: ${new Date().toLocaleString()}`);
+    } catch (err) {
+      console.error('Error fetching users:', err);
+      setStatus('Error al cargar datos: ' + (err.message || err));
+      wrapper.innerHTML = `<div class="empty">No se pudo obtener la lista de usuarios. Revisa la consola o la URL del endpoint.</div>`;
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setStatus(text){
+    statusEl.textContent = text;
+  }
+
+  function setLoading(loading){
+    refreshBtn.disabled = loading;
+    if(loading){
+      emptyEl && (emptyEl.textContent = 'Cargando registros...');
+    }
+  }
+
+  function safe(v){ return v === null || v === undefined ? '' : v; }
+
+  function renderTable(rows){
+    if(!rows || rows.length === 0){
+      wrapper.innerHTML = `<div class="empty">No hay registros aun.</div>`;
+      return;
+    }
+
+    // Definir cabeceras (si tu esquema cambia añade/quita columnas)
+    const headers = ['ID','Nombre','Intento','Tiempo (s)','Errores','Gano','Fecha'];
+
+    const table = document.createElement('table');
+    const thead = document.createElement('thead');
+    const trh = document.createElement('tr');
+    headers.forEach(h=>{
+      const th = document.createElement('th');
+      th.textContent = h;
+      trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    rows.forEach(r=>{
+      const tr = document.createElement('tr');
+      // id
+      const tdId = document.createElement('td'); tdId.textContent = safe(r.id); tr.appendChild(tdId);
+      // nombre
+      const tdN = document.createElement('td'); tdN.textContent = safe(r.nombre || r.username || r.name); tr.appendChild(tdN);
+      // intento
+      const tdI = document.createElement('td'); tdI.textContent = safe(r.intento || r.attempt || r.attempts); tr.appendChild(tdI);
+      // tiempo
+      const tdT = document.createElement('td'); tdT.textContent = safe(r.tiempo || r.time || r.seconds); tr.appendChild(tdT);
+      // errores
+      const tdE = document.createElement('td'); tdE.textContent = safe(r.errores || r.errors || r.incorrect_count); tr.appendChild(tdE);
+      // gano (boolean)
+      const tdG = document.createElement('td');
+      const won = (r.gano === true || r.gano === 1 || String(r.gano).toLowerCase() === 'true');
+      const span = document.createElement('span');
+      span.className = 'pill ' + (won ? 'ok' : 'no');
+      span.textContent = won ? 'SI' : 'NO';
+      tdG.appendChild(span);
+      tr.appendChild(tdG);
+      // fecha
+      const tdF = document.createElement('td');
+      let dateVal = r.created_at || r.createdAt || r.date || r.fecha;
+      if(dateVal){
+        try {
+          const d = new Date(dateVal);
+          tdF.textContent = isNaN(d.getTime()) ? dateVal : d.toLocaleString();
+        } catch(e){
+          tdF.textContent = dateVal;
+        }
+      } else tdF.textContent = '';
+      tr.appendChild(tdF);
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    wrapper.innerHTML = '';
+    wrapper.appendChild(table);
+  }
+
+  // refresh button
+  refreshBtn.addEventListener('click', fetchUsers);
+
+  // cargar al inicio
+  fetchUsers();
+
+  // opcional: refrescar cada 60s
+  // setInterval(fetchUsers, 60000);
+</script>
+</body>
+</html>
