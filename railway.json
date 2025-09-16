@@ -19,7 +19,7 @@ to this section's matching END comment to see page-specific styles.
 }
 
 /* Basic page style resets */
-{
+* {
   box-sizing: border-box;
 }
 [hidden] {
@@ -199,3 +199,4 @@ label {
 h2 {
   color: #2800FF;
 }
+
