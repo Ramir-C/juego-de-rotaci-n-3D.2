@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de Rotación en 3D</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #3498db;
+    }
+    #container {
+        width: 400px;
+        margin: 0 auto;
+        text-align: center;
+        padding: 20px;
+    }
+    #cube {
+        width: 200px;
+        height: 200px;
+        perspective: 800px;
+        margin: 80px auto;
+    }
+    .cube {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        transform-style: preserve-3d;
+        transition: transform 1s;
+    }
+    .face {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border: 3px solid black;
+        text-align: center;
+        line-height: 200px;
+        font-size: 50px;
+        font-weight: bold;
+    }
+    .front {
+        transform: translateZ(100px);
+        background-color: #2ecc71;
+    }
+    .back {
+        transform: rotateY(180deg) translateZ(100px);
+        background-color: red;
+    }
+    .right {
+        transform: rotateY(-90deg) translateZ(100px);
+        background-color: blue;
+    }
+    .left {
+        transform: rotateY(90deg) translateZ(100px);
+        background-color: gray;
+    }
+    .top {
+        transform: rotateX(90deg) translateZ(100px);
+        background-color: orange;
+    }
+    .bottom {
+        transform: rotateX(-90deg) translateZ(100px);
+        background-color: green;
+    }
+    #instructionsButton {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: green;
+        color: white;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 20px auto;
+    }
+    #instructionsButton img {
+        width: 24px;
+        height: 24px;
+        margin-left: 10px;
+    }
+</style>
+</head>
+<body>
+
+<div id="container">
+    <h1>Juego de Rotación en 3D</h1>
+    <input type="text" id="playerName" placeholder="Ingresa un usuario">
+    <button id="saveNameButton" onclick="saveName()">Guardar nombre</button>
+  
+    <div id="playerInfo" style="display: none;">
+        <span id="playerNameDisplay"></span> 
+        <span id="attemptDisplay"></span>
+    </div>
+    <button id="startButton" onclick="startGame()" style="display: none;">Iniciar Juego</button>
+      <button id="instructionsButton" onclick="playInstructions()">Instrucciones <img src="https://img.icons8.com/ios-filled/50/ffffff/play.png" alt="Play"></button>
+   
+  <div id="cube">
+        <div class="cube">
+            <div class="face front">1</div>
+            <div class="face back">2</div>
+            <div class="face right">3</div>
+            <div class="face left">4</div>
+            <div class="face top">5</div>
+            <div class="face bottom">6</div>
+        </div>
+    </div>
+    <div id="rotationCount" style="display: none;"></div>
+    <input type="number" id="guess" placeholder="Total de Rotaciones">
+    <button id="guessButton" onclick="checkGuess()">comprobar tu respuesta</button>
+    <div id="errorCount">Intentos restantes: 6</div>
+   
+    <button id="rotateAgainButton" style="display: none;" onclick="startGame()">Girar de Nuevo</button>
+
+   <button id="restartButton" onclick="restartGame()">Reiniciar</button>  
+  <div id="result"></div>
+    <div id="time"></div>
+</div>
+
+<audio id="instructionsAudio">
+    <source src="https://cdn.glitch.global/f840f32a-4f4c-44cf-9a6c-f382b81a4935/Instrucciones%20cubo.mp3?v=1716325320341" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+</audio>
+<audio id="success-sound">
+    <source src="https://cdn.glitch.global/6e430c3b-60be-4d4e-b53f-c8ce0fcb9707/acierto.wav?v=1711658410500" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+</audio>
+<audio id="error-sound">
+    <source src="https://cdn.glitch.global/6e430c3b-60be-4d4e-b53f-c8ce0fcb9707/error.wav?v=1711658404858" type="audio/mpeg">
+    Tu navegador no soporta el elemento de audio.
+</audio>
+
+<script>
+const MAX_ERRORS = 6;
+const MAX_ROTATIONS_PER_AXIS = 10;
+const MAX_ATTEMPTS = 5;
+
+let playerName = "";
+let totalRotations = { x: 0, y: 0, z: 0 };
+let correctTotalRotations = 0;
+let errorCount = MAX_ERRORS;
+let attempts = 0;
+let startTime = 0;
+let endTime = 0;
+
+function saveName() {
+    playerName = document.getElementById('playerName').value.trim();
+    if (playerName !== "") {
+        document.getElementById('playerNameDisplay').innerText = `Jugador: ${playerName}`;
+        document.getElementById('playerName').style.display = 'none';
+        document.getElementById('saveNameButton').style.display = 'none';
+        document.getElementById('startButton').style.display = 'inline-block';
+        document.getElementById('playerInfo').style.display = 'block';
+    }
+}
+
+function startGame() {
+    if (playerName !== '') {
+        document.getElementById('startButton').style.display = 'none';
+        document.getElementById('rotateAgainButton').style.display = 'none';
+        totalRotations = {
+            x: Math.floor(Math.random() * (MAX_ROTATIONS_PER_AXIS + 1)),
+            y: Math.floor(Math.random() * (MAX_ROTATIONS_PER_AXIS + 1)),
+            z: Math.floor(Math.random() * (MAX_ROTATIONS_PER_AXIS + 1))
+        };
+        correctTotalRotations = totalRotations.x + totalRotations.y + totalRotations.z;
+        errorCount = MAX_ERRORS;
+        attempts++;
+        document.getElementById('errorCount').innerText = 'Intentos restantes: ' + errorCount;
+        document.getElementById('result').innerText = "";
+        document.getElementById('time').innerText = "";
+        document.getElementById('guessButton').disabled = false;
+        document.getElementById('attemptDisplay').innerText = `Intento: ${attempts}`;
+        rotateCube();
+    }
+}
+
+function rotateCube() {
+    if (totalRotations.x > 0 || totalRotations.y > 0 || totalRotations.z > 0) {
+        const cube = document.querySelector('.cube');
+        let rotationAmount = 90;
+        if (totalRotations.x > 0) {
+            cube.style.transform += ' rotateX(' + rotationAmount + 'deg)';
+            totalRotations.x--;
+        } else if (totalRotations.y > 0) {
+            cube.style.transform += ' rotateY(' + rotationAmount + 'deg)';
+            totalRotations.y--;
+        } else if (totalRotations.z > 0) {
+            cube.style.transform += ' rotateZ(' + rotationAmount + 'deg)';
+            totalRotations.z--;
+        }
+        setTimeout(rotateCube, 2000);
+    } else {
+        document.getElementById('rotateAgainButton').style.display = 'inline-block';
+        startTime = new Date().getTime();
+    }
+}
+
+function checkGuess() {
+    endTime = new Date().getTime();
+    let elapsedTime = endTime - startTime;
+    let seconds = Math.floor((elapsedTime % 60000) / 1000);
+    document.getElementById('time').innerText = `Tiempo: ${seconds} segundos`;
+
+    const guess = parseInt(document.getElementById('guess').value);
+    attempts++;
+    if (guess === correctTotalRotations) {
+        document.getElementById('success-sound').play();
+        document.getElementById('result').innerText = `¡Felicidades! El número total de rotaciones es ${correctTotalRotations}. Intento: ${attempts}/${MAX_ATTEMPTS}`;
+        savePlayerData(playerName, attempts, seconds, MAX_ERRORS - errorCount, true);
+        document.getElementById('guessButton').disabled = true;
+    } else {
+        document.getElementById('error-sound').play();
+        errorCount--;
+        document.getElementById('errorCount').innerText = 'Intentos restantes: ' + errorCount;
+        document.getElementById('result').innerText = `Incorrecto. El número de rotaciones no es ${guess}.`;
+        if (errorCount <= 0) {
+            document.getElementById('guessButton').disabled = true;
+            document.getElementById('result').innerText += " ¡Has perdido! No tienes más intentos.";
+            savePlayerData(playerName, attempts, seconds, MAX_ERRORS, false);
+        }
+    }
+}
+
+function restartGame() {
+    document.getElementById('playerName').style.display = 'inline-block';
+    document.getElementById('saveNameButton').style.display = 'inline-block';
+    document.getElementById('startButton').style.display = 'none';
+    document.getElementById('playerInfo').style.display = 'none';
+    document.getElementById('rotateAgainButton').style.display = 'none';
+    document.getElementById('playerName').value = '';
+    document.getElementById('result').innerText = '';
+    document.getElementById('time').innerText = '';
+    document.getElementById('guess').value = '';
+    errorCount = MAX_ERRORS;
+    attempts = 0;
+}
+
+function playInstructions() {
+    document.getElementById('instructionsAudio').play();
+}
+
+function savePlayerData(name, attempts, time, errors, won) {
+    fetch('/save', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ nombre: name, intento: attempts, tiempo: time, errores: errors, gano: won })
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Datos guardados exitosamente:', data);
+    })
+    .catch((error) => {
+        console.error('Error al guardar los datos:', error);
+    });
+}
+
+function getPlayerData() {
+    fetch('/users')
+        .then(response => response.json())
+        .then(data => {
+            console.log('Players:', data.users);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+}
+
+window.onload = getPlayerData;
+
+</script>
+
+</body>
+</html>

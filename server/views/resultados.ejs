@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Buscar Jugadores</title>
+  <link rel="stylesheet" href="/style">
+</head>
+<body>
+  <h1>Buscar Jugadores</h1>
+  <form method="GET" action="/search-page">
+    <input type="text" name="nombre" placeholder="Nombre del jugador" required>
+    <button type="submit">Buscar</button>
+  </form>
+  <% if (users && users.length > 0) { %>
+    <table border="1">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Intento</th>
+          <th>Tiempo</th>
+          <th>Errores</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% users.forEach(function(user) { %>
+          <tr>
+            <td><%= user.id %></td>
+            <td><%= user.nombre %></td>
+            <td><%= user.intento %></td>
+            <td><%= user.tiempo %></td>
+            <td><%= user.errores %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } else if (typeof users !== 'undefined') { %>
+    <p>No se encontraron jugadores.</p>
+  <% } %>
+</body>
+</html>
