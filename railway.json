@@ -1,12 +1,4 @@
-/******************************************************************************
-START Glitch hello-app default styles
 
-The styles in this section do some minimal CSS resets, set default fonts and 
-colors, and handle the layout for our footer and "Remix on Glitch" button. If
-you're new to CSS they may seem a little complicated, but you can scroll down
-to this section's matching END comment to see page-specific styles.
-******************************************************************************/
-/* Our default values set as CSS variables */
 :root {
   --color-bg: #BDC9FF;
   --color-text-main: #000000;
@@ -18,15 +10,15 @@ to this section's matching END comment to see page-specific styles.
   --font-family-header: "HK Grotesk";
 }
 
-/* Basic page style resets */
-* {
+
+ {
   box-sizing: border-box;
 }
 [hidden] {
   display: none !important;
 }
 
-/* Import fonts */
+
 @font-face {
   font-family: HK Grotesk;
   src: url("https://cdn.glitch.me/605e2a51-d45f-4d87-a285-9410ad350515%2FHKGrotesk-Regular.otf?v=1603136326027")
@@ -39,7 +31,7 @@ to this section's matching END comment to see page-specific styles.
     format("opentype");
 }
 
-/* Our remix on glitch button */
+
 .btn--remix {
   font-family: HK Grotesk;
   padding: 0.75rem 1rem;
@@ -65,7 +57,6 @@ to this section's matching END comment to see page-specific styles.
   background-color: #D0FFF1;
 }
 
-/* Navigation grid */
 .footer {
   display: flex;
   justify-content: space-between;
@@ -98,16 +89,14 @@ a:not(.btn--remix):visited {
 .divider {
   padding: 0 1rem;
 }
-/******************************************************************************
-END Glitch hello-app default styles
-******************************************************************************/
+
 
 body {
   font-family: HK Grotesk;
   background-color: var(--color-bg);
 }
 
-/* Page structure */
+
 .wrapper {
   min-height: var(--wrapper-height);
   display: grid;
@@ -125,7 +114,7 @@ p {
   font-size: 1.25rem;
 }
 
-/* Title h1 style */
+
 .title {
   color: #2800FF;
   font-family: HK Grotesk;
@@ -136,7 +125,7 @@ p {
   margin: 2rem 0 0;
 }
 
-/* Very light scaling for our illustration */
+
 .illo-container {
   display: flex;
   justify-content: flex-end;
@@ -147,7 +136,7 @@ p {
   margin-top: 1rem;
 }
 
-/* Styles for our custom color form and its results */
+
 .color-info {
   margin-left: 5px;
 }
@@ -189,7 +178,7 @@ label {
   font-weight: bold;
 }
 
-/* Instructions */
+
 .instructions {
   margin: 1rem auto 0;
 }
