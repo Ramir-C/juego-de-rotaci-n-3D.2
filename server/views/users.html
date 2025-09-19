@@ -1,41 +1,96 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Buscar Jugadores</title>
-  <link rel="stylesheet" href="/style">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Resultados - juego de rotación 3D</title>
+  <style>
+    body { font-family: Arial, sans-serif; background:#f0f8ff; color:#222; margin:0; padding:0; text-align:center;}
+    header { background:#add8e6; padding:18px; border-bottom:2px solid #87cefa; }
+    .container { max-width:1000px; margin:20px auto; padding:16px; }
+    table { width:100%; border-collapse:collapse; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.06);}
+    th, td { padding:12px; border:1px solid #e6f2ff; text-align:center; }
+    th { background:#87cefa; color:#fff; }
+    tr:nth-child(even){ background:#f7fbff; }
+    .btn { display:inline-block; padding:10px 16px; border-radius:6px; text-decoration:none; color:#fff; background:#4682b4; margin:6px; }
+    .muted { color:#666; }
+    @media (max-width:600px){ th, td{ padding:8px; font-size:13px; } .container{padding:10px;} }
+  </style>
 </head>
 <body>
-  <h1>Buscar Jugadores</h1>
-  <form method="GET" action="/search-page">
-    <input type="text" name="nombre" placeholder="Nombre del jugador" required>
-    <button type="submit">Buscar</button>
-  </form>
-  <% if (users && users.length > 0) { %>
-    <table border="1">
+  <header>
+    <h1>📊 Resultados — juego de rotación 3D</h1>
+  </header>
+
+  <div class="container">
+    <p class="muted">Datos obtenidos desde la API <code>/users</code>.</p>
+
+    <table id="tabla-usuarios" aria-live="polite">
       <thead>
         <tr>
           <th>ID</th>
           <th>Nombre</th>
           <th>Intento</th>
-          <th>Tiempo</th>
+          <th>Tiempo (s)</th>
           <th>Errores</th>
+          <th>Ganó</th>
         </tr>
       </thead>
       <tbody>
-        <% users.forEach(function(user) { %>
-          <tr>
-            <td><%= user.id %></td>
-            <td><%= user.nombre %></td>
-            <td><%= user.intento %></td>
-            <td><%= user.tiempo %></td>
-            <td><%= user.errores %></td>
-          </tr>
-        <% }); %>
+        <tr><td colspan="6">Cargando datos...</td></tr>
       </tbody>
     </table>
-  <% } else if (typeof users !== 'undefined') { %>
-    <p>No se encontraron jugadores.</p>
-  <% } %>
+
+    <div style="margin-top:14px;">
+      <a class="btn" href="modulos.html">⬅ Regresar a Módulos</a>
+      <a class="btn" href="index.html">🏠 Inicio</a>
+      <a class="btn" id="btn-refrescar" href="#">🔄 Refrescar</a>
+    </div>
+  </div>
+
+  <script>
+    const API = 'https://juego-de-rotaci-n-3d2-recordando-figuras.up.railway.app/users';
+    const tbody = document.querySelector('#tabla-usuarios tbody');
+    const btnRef = document.getElementById('btn-refrescar');
+
+    async function cargarUsuarios() {
+      try {
+        tbody.innerHTML = '<tr><td colspan="6">Cargando datos...</td></tr>';
+        const res = await fetch(API, { cache: 'no-store' });
+        if (!res.ok) throw new Error('Respuesta ' + res.status);
+        const data = await res.json();
+
+        const users = data.users || [];
+        if (users.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6">No hay usuarios registrados.</td></tr>';
+          return;
+        }
+
+        // limpiar y poblar tabla
+        tbody.innerHTML = '';
+        users.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${u.id ?? '-'}</td>
+            <td>${u.nombre ?? '-'}</td>
+            <td>${u.intento ?? '-'}</td>
+            <td>${u.tiempo ?? '-'}</td>
+            <td>${u.errores ?? '-'}</td>
+            <td>${u.gano === null ? '-' : u.gano}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } catch (err) {
+        console.error('Error cargando usuarios:', err);
+        tbody.innerHTML = '<tr><td colspan="6">Error al cargar datos. Revisa la consola.</td></tr>';
+      }
+    }
+
+    btnRef.addEventListener('click', (e) => { e.preventDefault(); cargarUsuarios(); });
+
+    // Carga inicial
+    cargarUsuarios();
+  </script>
 </body>
 </html>
+
